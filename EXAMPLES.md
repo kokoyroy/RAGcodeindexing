@@ -2,6 +2,8 @@
 
 This guide provides detailed, real-world examples of using Code Indexer for various scenarios.
 
+> **📍 Important**: All `npm start` commands should be run from the **RAGcodeindexing directory** (the repository root).
+
 ## Table of Contents
 
 - [Basic Usage](#basic-usage)
@@ -14,23 +16,74 @@ This guide provides detailed, real-world examples of using Code Indexer for vari
 
 ## Basic Usage
 
-### Example 1: Index a New Project
+### Where to Run Commands
 
-**Scenario**: You just joined a team and want to understand their Express.js API.
+All commands should be executed from the RAGcodeindexing directory:
 
 ```bash
-# Clone the project
-git clone https://github.com/company/api-server.git
-cd api-server
+# Navigate to codeindexer repository
+cd /path/to/RAGcodeindexing
 
-# Index it
-npm start -- /path/to/api-server
+# Now you can run npm start
+npm start [path-to-project] [search-query]
+```
+
+### Path Argument Behavior
+
+- **No path provided**: Indexes the **current directory** (RAGcodeindexing project itself)
+- **Path provided**: Indexes the specified project
+
+```bash
+# Index the codeindexer project itself (default behavior)
+npm start
+
+# Index a specific project
+npm start -- /path/to/your/project
+
+# Index and search in one command
+npm start -- /path/to/your/project "search query"
+```
+
+---
+
+## Basic Examples
+
+### Example 1: Index the Code Indexer Project
+
+**Scenario**: You want to test the indexer on itself.
+
+```bash
+# From the RAGcodeindexing directory
+cd /path/to/RAGcodeindexing
+npm start
 
 # Output:
 ══════════════════════════════════════════════════════════════
   Code Indexer - RAG-powered Codebase Search
 ══════════════════════════════════════════════════════════════
 
+[Indexer] Found 8 TypeScript files
+[Indexer] Reading files: [██████████████████] 100% (8/8)
+[Indexer] Extracted 45 code chunks
+[Indexer] Generating embeddings: [████████████] 100% (45/45)
+[Indexer] ✅ Complete in 2.5s
+
+Results:
+  Files scanned: 8
+  Chunks indexed: 45
+  Duration: 2,500ms
+```
+
+### Example 2: Index a Different Project
+
+**Scenario**: You want to index your Express.js API.
+
+```bash
+# From the RAGcodeindexing directory
+cd /path/to/RAGcodeindexing
+npm start -- ~/projects/my-express-api
+
+# Output:
 [Indexer] Found 87 TypeScript files
 [Indexer] Reading files: [██████████████████] 100% (87/87)
 [Indexer] Extracted 342 code chunks
@@ -40,17 +93,19 @@ npm start -- /path/to/api-server
 Results:
   Files scanned: 87
   Chunks indexed: 342
+  Duration: 4,200ms
 ```
 
-### Example 2: Find Authentication Logic
+### Example 3: Index and Search in One Command
 
-**Scenario**: You need to understand how the authentication system works.
+**Scenario**: Index a project and immediately search for authentication code.
 
 ```bash
-npm start -- . "user authentication and login"
+# From the RAGcodeindexing directory
+npm start -- ~/projects/my-express-api "user authentication and login"
 
 # Results:
-[Main] Search Results:
+[Main] Searching for: "user authentication and login"
 
   [1] src/auth/authService.ts:45-78 (94% match)
       export class AuthService {
@@ -82,25 +137,15 @@ npm start -- . "user authentication and login"
           return res.status(401).json({ error: 'Invalid token' });
         }
       }
-
-  [3] src/routes/auth.ts:23-45 (85% match)
-      router.post('/login', async (req, res) => {
-        try {
-          const { email, password } = req.body;
-          const result = await authService.login(email, password);
-          res.json(result);
-        } catch (error) {
-          res.status(401).json({ error: error.message });
-        }
-      });
 ```
 
-### Example 3: Find Database Operations
+### Example 4: Search an Already-Indexed Project
 
-**Scenario**: You need to find all database queries related to users.
+**Scenario**: You've already indexed a project and want to search it again.
 
 ```bash
-npm start -- . "database queries for user operations"
+# From the RAGcodeindexing directory
+npm start -- ~/projects/my-express-api "database queries for user operations"
 
 # Results:
 [1] src/repositories/userRepository.ts:23-45 (91%)
@@ -131,8 +176,8 @@ npm start -- . "database queries for user operations"
 **Problem**: Users report getting 500 errors when uploading files.
 
 ```bash
-# Search for file upload handling
-npm start -- . "file upload error handling"
+# From the RAGcodeindexing directory
+npm start -- ~/projects/my-express-api "file upload error handling"
 
 # Results point to:
 [1] src/controllers/uploadController.ts:34-56 (92%)
@@ -157,8 +202,8 @@ npm start -- . "file upload error handling"
 **Problem**: You want to refactor all API error responses to use a standard format.
 
 ```bash
-# Find all error responses
-npm start -- . "API error response handling"
+# From the RAGcodeindexing directory
+npm start -- ~/projects/my-express-api "API error response handling"
 
 # Results:
 [1] src/controllers/userController.ts:78-82
@@ -180,8 +225,8 @@ npm start -- . "API error response handling"
 **Problem**: You need to find all SQL queries to check for injection vulnerabilities.
 
 ```bash
-# Find SQL query construction
-npm start -- . "SQL query string construction"
+# From the RAGcodeindexing directory
+npm start -- ~/projects/my-express-api "SQL query string construction"
 
 # Results:
 [1] src/repositories/productRepository.ts:45-67 (89%)
@@ -204,8 +249,8 @@ npm start -- . "SQL query string construction"
 **Problem**: You need to add rate limiting. Find existing middleware patterns.
 
 ```bash
-# Find middleware implementations
-npm start -- . "Express middleware implementation"
+# From the RAGcodeindexing directory
+npm start -- ~/projects/my-express-api "Express middleware implementation"
 
 # Results:
 [1] src/middleware/rateLimiter.ts:12-34 (88%)
@@ -230,8 +275,8 @@ npm start -- . "Express middleware implementation"
 **Problem**: You're reviewing a PR and need to understand the codebase context.
 
 ```bash
-# Find similar code patterns
-npm start -- . "dependency injection pattern"
+# From the RAGcodeindexing directory
+npm start -- ~/projects/my-express-api "dependency injection pattern"
 
 # Results show how DI is used elsewhere:
 [1] src/services/paymentService.ts:12-28
@@ -253,43 +298,49 @@ npm start -- . "dependency injection pattern"
 ### Search for Specific Patterns
 
 ```bash
+# From the RAGcodeindexing directory
+
 # Find React hooks
-npm start -- . "React hooks state management"
+npm start -- ~/projects/my-react-app "React hooks state management"
 
 # Find async/await error handling
-npm start -- . "async await try catch error"
+npm start -- ~/projects/my-express-api "async await try catch error"
 
 # Find type definitions
-npm start -- . "TypeScript interface type definition"
+npm start -- ~/projects/my-typescript-lib "TypeScript interface type definition"
 
 # Find environment configuration
-npm start -- . "environment variables configuration"
+npm start -- ~/projects/my-app "environment variables configuration"
 ```
 
 ### Combine Multiple Concepts
 
 ```bash
+# From the RAGcodeindexing directory
+
 # Find authentication + database
-npm start -- . "authentication database user lookup"
+npm start -- ~/projects/my-express-api "authentication database user lookup"
 
 # Find API + validation
-npm start -- . "API request validation schema"
+npm start -- ~/projects/my-express-api "API request validation schema"
 
 # Find logging + errors
-npm start -- . "error logging and monitoring"
+npm start -- ~/projects/my-express-api "error logging and monitoring"
 ```
 
 ### Search by Intent
 
 ```bash
+# From the RAGcodeindexing directory
+
 # Security-related code
-npm start -- . "security validation sanitization"
+npm start -- ~/projects/my-express-api "security validation sanitization"
 
 # Performance optimization
-npm start -- . "caching performance optimization"
+npm start -- ~/projects/my-express-api "caching performance optimization"
 
 # Testing code
-npm start -- . "unit test mock stub"
+npm start -- ~/projects/my-express-api "unit test mock stub"
 ```
 
 ---
@@ -303,12 +354,15 @@ npm start -- . "unit test mock stub"
 ```bash
 #!/bin/bash
 # ci-check-patterns.sh
+# Run this script from the RAGcodeindexing directory
 
-# Index the codebase
-npm start -- . > /dev/null 2>&1
+PROJECT_PATH="/path/to/your/project"
+
+# Index the codebase (suppress output)
+npm start -- "$PROJECT_PATH" > /dev/null 2>&1
 
 # Search for anti-patterns
-RESULT=$(npm start -- . "SQL string concatenation" | grep -c "concatenation")
+RESULT=$(npm start -- "$PROJECT_PATH" "SQL string concatenation" | grep -c "concatenation")
 
 if [ $RESULT -gt 0 ]; then
   echo "❌ Found potential SQL injection vulnerabilities!"
@@ -323,7 +377,12 @@ echo "✅ No SQL injection patterns found"
 **Scenario**: Auto-generate API documentation.
 
 ```typescript
+// generate-api-docs.ts
+// Run from RAGcodeindexing directory: node generate-api-docs.js
+
 import { indexer } from './dist/indexer.js';
+
+const PROJECT_PATH = '/path/to/your/project';
 
 async function generateAPIDocs() {
   await indexer.initialize();
@@ -351,8 +410,13 @@ generateAPIDocs();
 **Scenario**: Build a tool to help with code reviews.
 
 ```typescript
+// review-assistant.ts
+// Run from RAGcodeindexing directory: node review-assistant.js /path/to/changed/file.ts
+
 import { indexer } from './dist/indexer.js';
 import * as fs from 'fs';
+
+const PROJECT_PATH = '/path/to/your/project';
 
 async function reviewAssistant(changedFile: string) {
   await indexer.initialize();
@@ -379,7 +443,6 @@ async function reviewAssistant(changedFile: string) {
   await indexer.shutdown();
 }
 
-// Usage: node review-assistant.js src/newFeature.ts
 reviewAssistant(process.argv[2]);
 ```
 
@@ -388,7 +451,7 @@ reviewAssistant(process.argv[2]);
 **Scenario**: Use Claude to explore your codebase.
 
 ```bash
-# Start MCP server
+# From the RAGcodeindexing directory
 npm run mcp -- /path/to/your/project
 
 # In Claude Desktop, you can now ask:
@@ -406,27 +469,31 @@ Claude will automatically use the `search_codebase` tool to find relevant code.
 ### Tip 1: Incremental Indexing
 
 ```bash
-# First run: indexes everything (slow)
-npm start -- /path/to/large/project
+# From the RAGcodeindexing directory
+
+# First run: indexes everything (slower)
+npm start -- ~/projects/large-project
 # Time: 15 seconds
 
 # Second run: only changed files (fast)
-npm start -- /path/to/large/project
+npm start -- ~/projects/large-project
 # Time: 0.5 seconds (if no files changed)
 ```
 
 ### Tip 2: Force Re-index
 
 ```bash
+# From the RAGcodeindexing directory
+
 # If you think the index is stale
 rm codeindexer.db
-npm start -- /path/to/project
+npm start -- ~/projects/my-project
 ```
 
 ### Tip 3: Adjust Concurrency
 
 ```typescript
-// In your code
+// In your code (run from RAGcodeindexing directory)
 await indexer.index({
   targetDir: '/path/to/project',
   concurrency: 20  // Increase for faster indexing on powerful machines
@@ -436,22 +503,26 @@ await indexer.index({
 ### Tip 4: Search Optimization
 
 ```bash
-# More specific queries are faster
-npm start -- . "user authentication login JWT validation"  # Good
-npm start -- . "auth"  # Too broad, many results
+# From the RAGcodeindexing directory
 
-# Limit results
+# More specific queries are faster
+npm start -- ~/projects/my-project "user authentication login JWT validation"  # Good
+npm start -- ~/projects/my-project "auth"  # Too broad, many results
+
+# Limit results programmatically
 const results = await indexer.search('query', 5);  // Only top 5
 ```
 
 ### Tip 5: Database Location
 
 ```bash
+# From the RAGcodeindexing directory
+
 # Put database on fast storage
-DB_PATH=/tmp/codeindexer.db npm start -- /path/to/project
+DB_PATH=/tmp/codeindexer.db npm start -- ~/projects/my-project
 
 # Or on SSD
-DB_PATH=~/codeindexer.db npm start -- /path/to/project
+DB_PATH=~/codeindexer.db npm start -- ~/projects/my-project
 ```
 
 ---
@@ -461,39 +532,45 @@ DB_PATH=~/codeindexer.db npm start -- /path/to/project
 ### Pattern 1: Daily Workflow
 
 ```bash
+# From the RAGcodeindexing directory
+
 # Morning: Update index
-npm start -- .
+npm start -- ~/projects/my-project
 
 # During work: Search as needed
-npm start -- . "function I'm looking for"
+npm start -- ~/projects/my-project "function I'm looking for"
 
 # End of day: Index is already up to date
-npm start -- .  # Fast incremental update
+npm start -- ~/projects/my-project  # Fast incremental update
 ```
 
 ### Pattern 2: Project Exploration
 
 ```bash
+# From the RAGcodeindexing directory
+
 # Start broad
-npm start -- . "main entry point"
+npm start -- ~/projects/my-project "main entry point"
 
 # Then narrow down
-npm start -- . "API routes"
-npm start -- . "database models"
-npm start -- . "authentication flow"
+npm start -- ~/projects/my-project "API routes"
+npm start -- ~/projects/my-project "database models"
+npm start -- ~/projects/my-project "authentication flow"
 ```
 
 ### Pattern 3: Bug Investigation
 
 ```bash
+# From the RAGcodeindexing directory
+
 # 1. Find the error
-npm start -- . "error message or type"
+npm start -- ~/projects/my-project "error message or type"
 
 # 2. Find related code
-npm start -- . "function that calls the error"
+npm start -- ~/projects/my-project "function that calls the error"
 
 # 3. Find similar issues
-npm start -- . "similar error handling"
+npm start -- ~/projects/my-project "similar error handling"
 ```
 
 ---
@@ -503,24 +580,28 @@ npm start -- . "similar error handling"
 ### Issue: No Results Found
 
 ```bash
+# From the RAGcodeindexing directory
+
 # Try broader queries
-npm start -- . "auth"  # Instead of "JWT token validation middleware"
+npm start -- ~/projects/my-project "auth"  # Instead of "JWT token validation middleware"
 
 # Check if files are indexed
-npm start -- . "anything"
+npm start -- ~/projects/my-project "anything"
 # If no results, try reindexing
 rm codeindexer.db
-npm start -- .
+npm start -- ~/projects/my-project
 ```
 
 ### Issue: Wrong Results
 
 ```bash
+# From the RAGcodeindexing directory
+
 # Be more specific
-npm start -- . "user authentication login"  # Better than just "user"
+npm start -- ~/projects/my-project "user authentication login"  # Better than just "user"
 
 # Use technical terms
-npm start -- . "Promise async await"  # Instead of "asynchronous code"
+npm start -- ~/projects/my-project "Promise async await"  # Instead of "asynchronous code"
 ```
 
 ---
@@ -529,37 +610,71 @@ npm start -- . "Promise async await"  # Instead of "asynchronous code"
 
 1. **Index Multiple Projects**: Create separate databases for different projects:
    ```bash
-   DB_PATH=~/project1.db npm start -- /path/to/project1
-   DB_PATH=~/project2.db npm start -- /path/to/project2
+   # From the RAGcodeindexing directory
+   DB_PATH=~/project1.db npm start -- ~/projects/project1
+   DB_PATH=~/project2.db npm start -- ~/projects/project2
    ```
 
 2. **Combine with grep**: Use semantic search to find areas, then grep for details:
    ```bash
+   # From the RAGcodeindexing directory
    # Find the area
-   npm start -- . "database connection"
-   # Then grep for specifics
+   npm start -- ~/projects/my-project "database connection"
+   # Then grep for specifics in the project directory
+   cd ~/projects/my-project
    grep -r "pool_size" src/database/
    ```
 
-3. **Save Common Searches**: Create aliases:
+3. **Save Common Searches**: Create aliases in your shell config:
    ```bash
-   alias search-auth='npm start -- . "authentication login"'
-   alias search-db='npm start -- . "database query"'
+   # Add to ~/.bashrc or ~/.zshrc
+   alias search-auth='npm start -- ~/projects/my-express-api "authentication login"'
+   alias search-db='npm start -- ~/projects/my-express-api "database query"'
+   
+   # Then run from anywhere (must be in RAGcodeindexing directory)
+   cd /path/to/RAGcodeindexing
+   search-auth
    ```
 
 4. **Use with Git**: Find code in specific branches:
    ```bash
+   # In your project directory
+   cd ~/projects/my-project
    git checkout feature-branch
-   npm start -- . "new feature code"
+   
+   # Back to codeindexer directory
+   cd /path/to/RAGcodeindexing
+   npm start -- ~/projects/my-project "new feature code"
    ```
+
+---
+
+## Quick Reference
+
+```bash
+# Navigate to codeindexer
+cd /path/to/RAGcodeindexing
+
+# Index current directory (codeindexer itself)
+npm start
+
+# Index a specific project
+npm start -- /path/to/project
+
+# Index and search
+npm start -- /path/to/project "search query"
+
+# Run MCP server
+npm run mcp -- /path/to/project
+```
 
 ---
 
 ## Next Steps
 
-- Read the [API Reference](API.md) for programmatic usage
-- Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
 - See [LEARN.md](LEARN.md) for deep dives into how it works
+- Check [README.md](README.md) for full documentation
+- Review [CONTRIBUTING.md](CONTRIBUTING.md) to contribute
 
 ---
 
