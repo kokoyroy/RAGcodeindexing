@@ -1,144 +1,255 @@
+<div align="center">
+
 # Code Indexer
 
-A powerful codebase indexing tool that makes your code searchable using natural language. Built with TypeScript, it uses vector embeddings and semantic search to find relevant code snippets based on meaning, not just keywords.
+**AI-Powered Semantic Code Search for Your Local Codebase**
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178c6.svg)
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933.svg?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://modelcontextprotocol.io/)
 
----
+[Features](#-features) • [Quick Start](#-quick-start) • [How It Works](#-how-it-works) • [Examples](#-examples) • [API](#-api-reference) • [Contributing](#-contributing)
 
-## Table of Contents
-
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [How It Works](#how-it-works)
-- [Usage](#usage)
-  - [CLI](#cli)
-  - [MCP Server](#mcp-server)
-  - [Programmatic API](#programmatic-api)
-- [Architecture](#architecture)
-  - [File Structure](#file-structure)
-  - [Pipeline](#pipeline)
-- [Configuration](#configuration)
-- [Development](#development)
-- [Tech Stack](#tech-stack)
-- [Why This Project](#why-this-project)
-- [License](#license)
+</div>
 
 ---
 
-## Features
+## 🎯 What is This?
 
-- **Natural Language Search**: Find code using plain English queries like "find the authentication function"
-- **Semantic Understanding**: Uses AI embeddings to understand code meaning, not just keywords
-- **Incremental Indexing**: Only re-indexes changed files, saving time on large codebases
-- **Local & Private**: Runs entirely locally - no external API calls, no data leaves your machine
-- **MCP Integration**: Exposes tools for LLMs (Claude, GPT, opencode) to search your codebase
-- **Multiple File Types**: Supports JavaScript (.js), TypeScript (.ts), and TSX (.tsx)
-- **Tree-sitter Parsing**: Intelligent code chunking that preserves functions, classes, and exports
-- **Parallel Processing**: Fast embedding generation with configurable concurrency
+Code Indexer is a **local, privacy-first** tool that makes your codebase searchable using natural language. Instead of searching for exact keywords, you can ask questions like:
+
+- *"Where is user authentication handled?"*
+- *"Find database connection logic"*
+- *"Show me error handling for API calls"*
+
+It uses **AI embeddings** and **semantic search** to understand the *meaning* of your code, not just the text. Perfect for onboarding, debugging, code reviews, and augmenting LLM coding assistants.
+
+### Why Code Indexer?
+
+| Traditional Search | Code Indexer |
+|-------------------|--------------|
+| Searches for exact text matches | Understands code *semantically* |
+| `"auth"` only finds `"auth"` | `"login"` finds authentication code |
+| grep, ripgrep, IDE search | Vector similarity search |
+| No context understanding | AI-powered meaning extraction |
 
 ---
 
-## Quick Start
+## ✨ Features
+
+- 🔍 **Semantic Search** - Find code by meaning, not just keywords
+- 🏠 **100% Local** - No cloud APIs, no data leaves your machine
+- ⚡ **Fast Indexing** - Incremental updates, parallel processing
+- 🧠 **Smart Chunking** - Tree-sitter parsing preserves code structure
+- 🔌 **MCP Integration** - Works with Claude, opencode, and other LLMs
+- 📦 **Zero Config** - Works out of the box, no setup required
+- 🎯 **Type-Safe** - Full TypeScript support with comprehensive types
+- 🔄 **Incremental** - Only re-indexes changed files
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18 or higher
+- npm 9 or higher
+- ~100MB disk space (for ML model)
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/kokoyroy/RAGcodeindexing.git
+cd RAGcodeindexing
+
 # Install dependencies
 npm install
 
 # Build TypeScript
 npm run build
 
-# Index current directory and search
+# Index and search your codebase!
 npm start
-
-# Or index a specific project
-npm start -- /path/to/your/project "authentication function"
 ```
 
-That's it! The first run will download the embedding model (~70MB) and then index your code.
+> **💡 Tip**: No path needed! Running `npm start` without arguments indexes the **current directory** by default.
+
+**First run?** The tool will download the ML model (~70MB). This only happens once.
+
+### Basic Usage
+
+**Default Behavior**: If you don't specify a path, Code Indexer will automatically use the **current directory**.
+
+```bash
+# Index current directory (default)
+npm start
+
+# Index current directory explicitly
+npm start -- .
+
+# Index a specific project
+npm start -- /path/to/your/project
+
+# Index and search in one command
+npm start -- . "authentication function"
+
+# Index specific project and search
+npm start -- /path/to/project "database connection pool"
+```
 
 ---
 
-## How It Works
+## 🏗️ How It Works
 
 ### The RAG Pipeline
 
-This tool implements the **Retrieval** part of RAG (Retrieval-Augmented Generation):
+Code Indexer implements the **Retrieval** part of RAG (Retrieval-Augmented Generation):
 
 ```
-Your Codebase ──► Indexing ──► Vector Database
-                                          │
-                                          ▼
-User Query  ──► Embedding ──► Similarity Search ──► Relevant Code
+┌─────────────────────────────────────────────────────────────┐
+│                    INDEXING PIPELINE                         │
+├─────────────────────────────────────────────────────────────┤
+│  Codebase → Scan → Parse → Chunk → Embed → Store (SQLite)  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                     SEARCH PIPELINE                          │
+├─────────────────────────────────────────────────────────────┤
+│  Query → Embed → Vector Search → Rank → Return Results     │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Key Concepts
+### Key Technologies
 
-1. **Tree-sitter Parsing**: Breaks code into semantic units (functions, classes, exports) instead of arbitrary lines
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **Parsing** | Tree-sitter | Parse code into AST, extract semantic chunks |
+| **Embedding** | Transformers.js (all-MiniLM-L6-v2) | Convert text to 384-dim vectors |
+| **Storage** | SQLite + sqlite-vec | Store chunks + vectors locally |
+| **Search** | Cosine similarity | Find most similar code vectors |
 
-2. **Vector Embeddings**: Converts code chunks into 384-dimensional vectors using the all-MiniLM-L6-v2 model
+### Why Tree-sitter?
 
-3. **Cosine Similarity**: Finds the most similar code by comparing vectors mathematically
+Traditional code search splits files by lines or characters. Tree-sitter understands code structure:
 
-4. **Incremental Indexing**: Uses MD5 hashes to detect which files changed, only re-indexing what's necessary
+```typescript
+// ❌ Traditional: arbitrary line splits
+// Line 1: function authenticateUser(
+// Line 2:   credentials: Creds
+
+// ✅ Tree-sitter: semantic chunks
+function authenticateUser(credentials: Creds): Promise<User> {
+  // entire function as one chunk
+}
+```
 
 ---
 
-## Usage
+## 📖 Examples
 
-### CLI
+### Example 1: Index Current Directory
 
 ```bash
-# Index current directory
+# From the codeindexer directory
+cd /path/to/RAGcodeindexing
 npm start
 
-# Index specific directory
-npm start -- /path/to/project
-
-# Index and search
-npm start -- . "search query"
-
-# Show help
-npm start -- --help
+# This indexes the codeindexer project itself!
 ```
 
-### MCP Server
-
-Start the MCP server to enable LLM integration:
+### Example 2: Index a Specific Project
 
 ```bash
-# Start server (indexes on startup)
-npm run mcp -- /path/to/project
+$ npm start -- ~/projects/my-express-api
+
+══════════════════════════════════════════════════════════════
+  Code Indexer - RAG-powered Codebase Search
+══════════════════════════════════════════════════════════════
+
+[Indexer] Initializing...
+[Indexer] Found 42 .ts files
+[Indexer] Reading files: [██████████████████] 100% (42/42)
+[Indexer] Extracted 156 code chunks
+[Indexer] Generating embeddings: [████████████] 100% (156/156)
+[Indexer] ✅ Complete in 3.2s
+
+Results:
+  Files scanned: 42
+  Chunks indexed: 156
+  Duration: 3,240ms
 ```
 
-This exposes three tools for LLMs:
+### Example 2: Semantic Search
 
-| Tool | Description |
-|------|-------------|
-| `search_codebase` | Find relevant code using natural language |
-| `reindex_codebase` | Force re-index all files |
-| `get_index_stats` | Get index statistics |
+```bash
+$ npm start -- ~/projects/my-express-api "error handling"
 
-#### Configuring with Claude Desktop
+[Main] Searching for: "error handling"
 
-Add this to your Claude Desktop config (`~/Library/Application Support/Claude/settings.json`):
+Top Results:
+  [1] src/middleware/errorHandler.ts:15-32 (92% match)
+      export function errorHandler(err: Error, req: Request...
+
+  [2] src/utils/logger.ts:45-58 (87% match)
+      catch (error) {
+        logger.error('Database connection failed'...
+
+  [3] src/api/routes.ts:102-118 (84% match)
+      try {
+        await processPayment(data);
+      } catch (error)...
+```
+
+### Example 3: Find Similar Code
+
+```bash
+$ npm start -- . "JWT token validation"
+
+[Main] Results:
+  [1] src/auth/jwt.ts:23-41 (95%)
+      export function validateToken(token: string)...
+
+  [2] src/middleware/auth.ts:12-28 (89%)
+      if (!verifyJWT(req.headers.authorization))...
+```
+
+**See [EXAMPLES.md](EXAMPLES.md) for more detailed use cases.**
+
+---
+
+## 🔌 MCP Integration
+
+Code Indexer exposes tools via the **Model Context Protocol (MCP)**, allowing LLMs like Claude to search your codebase.
+
+### Available Tools
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `search_codebase` | Search code semantically | `query` (string), `limit` (number) |
+| `reindex_codebase` | Force full re-index | none |
+| `get_index_stats` | Get indexing statistics | none |
+
+### Configure with Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "code-indexer": {
       "command": "node",
-      "args": ["/absolute/path/to/codeindexer/dist/mcpServer.js", "/path/to/your/project"]
+      "args": ["/path/to/RAGcodeindexing/dist/mcpServer.js", "/path/to/your/project"]
     }
   }
 }
 ```
 
-#### Configuring with opencode
+### Configure with opencode
 
-Add this to your opencode config:
+Add to your opencode config:
 
 ```json
 {
@@ -146,318 +257,236 @@ Add this to your opencode config:
     "code-indexer": {
       "command": "npm",
       "args": ["run", "mcp", "--", "/path/to/your/project"],
-      "cwd": "/path/to/codeindexer"
+      "cwd": "/path/to/RAGcodeindexing"
     }
   }
 }
 ```
 
-### Programmatic API
+### Start MCP Server
+
+```bash
+npm run mcp -- /path/to/your/project
+```
+
+---
+
+## 📚 API Reference
+
+### Programmatic Usage
 
 ```typescript
-import { indexer } from './indexer.js';
+import { indexer } from './dist/indexer.js';
 
-// Initialize (connects DB, loads ML model)
+// Initialize
 await indexer.initialize();
 
-// Index a codebase
+// Index a directory
 const stats = await indexer.index({
   targetDir: '/path/to/project',
-  forceReindex: false,  // Use incremental indexing
+  forceReindex: false,  // Incremental indexing
+  concurrency: 10       // Parallel workers
 });
 
 console.log(stats);
-// { filesScanned: 50, filesChanged: 12, chunksExtracted: 234, chunksIndexed: 234, errors: 0, duration: 5000 }
+// {
+//   filesScanned: 42,
+//   filesChanged: 12,
+//   chunksExtracted: 156,
+//   chunksIndexed: 156,
+//   errors: 0,
+//   duration: 3240
+// }
 
-// Search!
+// Search
 const results = await indexer.search('authentication function', 5);
 
-// Results include file path, lines, similarity score, and code preview
-console.log(results);
-// [
-//   {
-//     id: 1,
-//     file_path: "src/auth.ts",
-//     chunk_text: "function authenticateUser() { ... }",
-//     start_line: 42,
-//     end_line: 58,
-//     similarity: 0.92
-//   },
-//   ...
-// ]
+console.log(results[0]);
+// {
+//   id: 1,
+//   file_path: 'src/auth.ts',
+//   chunk_text: 'export async function authenticateUser...',
+//   start_line: 42,
+//   end_line: 58,
+//   similarity: 0.92
+// }
 
-// Clean up when done
+// Cleanup
 await indexer.shutdown();
 ```
 
----
-
-## Architecture
-
-### File Structure
-
-```
-codeindexing/
-├── src/
-│   ├── database.ts              # SQLite + sqlite-vec storage
-│   ├── embedder.ts             # Text → vector conversion (ML)
-│   ├── fileScanner.ts          # File discovery and hashing
-│   ├── semanticChunker.ts      # Tree-sitter code parsing
-│   ├── indexer.ts              # Parallel pipeline orchestrator
-│   ├── indexer_sequential.ts  # Sequential pipeline (slower, simpler)
-│   ├── main.ts                 # CLI entry point
-│   ├── mcpServer.ts            # MCP server for LLM integration
-│   └── mcpClient.ts            # MCP client (testing)
-├── package.json
-├── tsconfig.json
-├── LEARN.md                    # Deep-dive learning guide
-└── README.md
-```
-
-### Pipeline
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     INDEXING PIPELINE                            │
-├─────────────────────────────────────────────────────────────────┤
-│  1. SCAN        Find all .js/.ts/.tsx files                   │
-│  2. READ        Load file contents + compute MD5 hashes        │
-│  3. FILTER      Compare hashes → skip unchanged files           │
-│  4. CHUNK       Parse code into functions/classes (Tree-sitter)│
-│  5. EMBED       Convert each chunk to 384-dim vector           │
-│  6. STORE       Save to SQLite + vector table                  │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│                     SEARCH PIPELINE                              │
-├─────────────────────────────────────────────────────────────────┤
-│  Query: "find the login function"                               │
-│                              │                                  │
-│  ┌────────────┐             │                                  │
-│  │  EMBEDDER  │◄────────────┘                                  │
-│  │  (ML Model)│                                                 │
-│  └─────┬──────┘                                                 │
-│        │ 384-dim vector                                        │
-│        ▼                                                         │
-│  ┌────────────┐                                                 │
-│  │  DATABASE  │                                                 │
-│  │ (vec search)│                                                │
-│  └─────┬──────┘                                                 │
-│        │ SearchResults                                           │
-│        ▼                                                         │
-│  Code chunks sorted by similarity!                              │
-└─────────────────────────────────────────────────────────────────┘
-```
+**See [API.md](API.md) for complete API documentation.**
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
 ### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DB_PATH` | Custom database file path | `./codeindexer.db` |
+| `DB_PATH` | SQLite database location | `./codeindexer.db` |
 
 ### Indexer Options
 
 ```typescript
 interface IndexerOptions {
-  targetDir: string;        // Directory to index (required)
-  forceReindex?: boolean;  // Skip incremental, re-index all (default: false)
-  concurrency?: number;     // Parallel embedding workers (default: 10)
+  targetDir: string;       // Directory to index (required)
+  forceReindex?: boolean;  // Re-index all files (default: false)
+  concurrency?: number;    // Parallel embedding workers (default: 10)
 }
 ```
 
-### Indexer Statistics
+### Supported File Types
 
-```typescript
-interface IndexerStats {
-  filesScanned: number;     // Total files found
-  filesChanged: number;     // Files that needed re-indexing
-  chunksExtracted: number;  // Code chunks parsed
-  chunksIndexed: number;    // Chunks saved to DB
-  errors: number;           // Errors encountered
-  duration: number;         // Time taken (ms)
-}
-```
+- `.js` - JavaScript
+- `.ts` - TypeScript
+- `.tsx` - TypeScript with JSX
+
+### Ignored Directories
+
+- `node_modules/`
+- `.git/`
+- `dist/`, `build/`
+- `coverage/`
 
 ---
 
-## Development
-
-### Prerequisites
-
-- Node.js 18+
-- npm 9+
-
-### Setup
+## 🛠️ Development
 
 ```bash
 # Install dependencies
 npm install
 
-# Build TypeScript
+# Build
 npm run build
 
-# Run type check
+# Type check
 npx tsc --noEmit
 
-# Start development
+# Run
 npm start
-```
 
-### Testing MCP Server
-
-```bash
-# Start MCP server
+# Run MCP server
 npm run mcp -- /path/to/project
+```
 
-# Or test with MCP client
-node dist/mcpClient.js /path/to/project
+### Project Structure
+
+```
+src/
+├── main.ts              # CLI entry point
+├── indexer.ts           # Main orchestrator
+├── database.ts          # SQLite + vector storage
+├── embedder.ts          # ML model for embeddings
+├── fileScanner.ts       # File discovery
+├── semanticChunker.ts   # Tree-sitter parsing
+├── mcpServer.ts         # MCP protocol server
+└── mcpClient.ts         # MCP test client
 ```
 
 ---
 
-## Tech Stack
+## 🤝 Contributing
 
-| Technology | Purpose |
-|------------|---------|
-| **TypeScript** | Type-safe JavaScript |
-| **SQLite** | Local database |
-| **sqlite-vec** | Vector similarity search |
-| **Transformers.js** | Local ML embeddings |
-| **Tree-sitter** | Code parsing to AST |
-| **MCP SDK** | LLM tool integration |
+We love contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
-### Dependencies
+- 🐛 Reporting bugs
+- 💡 Requesting features
+- 🔧 Submitting pull requests
+- 📝 Improving documentation
 
-- `better-sqlite3` - SQLite driver
-- `@xenova/transformers` - ML model inference
-- `tree-sitter` - Code parsing
-- `tree-sitter-javascript` - JS/TS grammars
-- `@modelcontextprotocol/sdk` - MCP protocol
-- `md5` - File hashing
+### Quick Contribution Guide
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
-## Why This Project?
+## 🗺️ Roadmap
 
-### Traditional Search vs Semantic Search
-
-**Traditional (grep/strings):**
-```
-Query: "authenticate user"
-Matches: "function authenticateUser()"
-Only finds exact or substring matches
-```
-
-**This project (semantic):**
-```
-Query: "login functionality"
-Matches: "function authenticateUser()"
-Matches: "function validateCredentials()"
-Matches: "class SessionManager"
-Finds code by MEANING, not just keywords!
-```
-
-### Use Cases
-
-1. **Code Review**: Quickly find relevant code before reviewing PRs
-2. **Onboarding**: Help new developers explore the codebase
-3. **Debugging**: Find similar bug fixes or error handling
-4. **LLM Augmentation**: Provide context to AI coding assistants
-5. **Refactoring**: Locate all usages of patterns to update
+- [ ] Support for more languages (Python, Go, Rust)
+- [ ] Web UI for search
+- [ ] Code navigation (go to definition)
+- [ ] Import analysis and dependency graphs
+- [ ] Team collaboration features
+- [ ] Cloud sync option
 
 ---
 
-## Examples
+## ❓ FAQ
 
-### Example 1: Index the Current Project
+<details>
+<summary><strong>How is this different from grep or IDE search?</strong></summary>
 
-```bash
-cd codeindexing
-npm start
-```
+Traditional search looks for exact text matches. Code Indexer understands the *meaning* of your code using AI embeddings. A search for "login" will find authentication functions, even if they're named `authenticateUser` or `validateCredentials`.
+</details>
 
-Output:
-```
-══════════════════════════════════════════════════════════════
-  Code Indexer - RAG-powered Codebase Search
-══════════════════════════════════════════════════════════════
+<details>
+<summary><strong>Is my code sent to any external servers?</strong></summary>
 
-[Main] Initializing indexer...
-[Indexer] Starting indexing of: /Users/kokoyroy/Desktop/codeindexing
-[Indexer] Found 8 supported files
-[Indexer] Reading files: [██████████████████] 100% (8/8)
-[Indexer] Indexing 8 changed files
-[Indexer] Extracted 45 code chunks
-[Indexer] Generating embeddings: [██████████████████] 100% (45/45)
-[Indexer] Storing chunks in database...
-[Indexer] ✅ Indexing complete in 2500ms
+No. Everything runs locally on your machine. The ML model runs in your Node.js process, and all data stays in your local SQLite database.
+</details>
 
-[Main] Indexing Results:
-  Files scanned: 8
-  Files changed: 8
-  Chunks extracted: 45
-  Chunks indexed: 45
-  Errors: 0
-  Duration: 2500ms
+<details>
+<summary><strong>How accurate is the semantic search?</strong></summary>
 
-[Main] Running test search...
-  Query: "function declaration"
+Accuracy depends on the quality of your code comments and naming conventions. Well-named functions and good documentation improve results. The tool uses cosine similarity on 384-dimensional vectors, which is effective for semantic matching.
+</details>
 
-[Main] Search Results:
-  [1] src/semanticChunker.ts:30-40
-      Similarity: 87.5%
-      Preview: function_declaration(node: Parser.SyntaxNode, sourceCode: string...
-```
+<details>
+<summary><strong>Can I use this with large codebases?</strong></summary>
 
-### Example 2: Index a Specific Project
+Yes! The tool uses incremental indexing (only processes changed files) and parallel processing. It's been tested on codebases with 1000+ files.
+</details>
 
-```bash
-npm start -- /Users/kokoyroy/Desktop/projects/my-express-app
-```
+<details>
+<summary><strong>What's the performance impact?</strong></summary>
 
-### Example 3: Index and Search Together
+- **First run**: Downloads ML model (~70MB), then indexes all files
+- **Subsequent runs**: Only re-indexes changed files
+- **Search**: Returns results in milliseconds
+- **Memory**: ~200MB for ML model + embeddings cache
+</details>
 
-```bash
-npm start -- /Users/kokoyroy/Desktop/my-react-app "authentication middleware"
-```
+<details>
+<summary><strong>Can I use this with non-JavaScript projects?</strong></summary>
 
-### Example 4: Common Project Paths
-
-```bash
-# Current working directory
-npm start
-
-# A nearby project folder
-npm start -- ../my-project
-npm start -- /Users/kokoyroy/Desktop/projects/webapp
-
-# A Node.js/TypeScript project
-npm start -- /Users/kokoyroy/Desktop/projects/typescript-api
-
-# A React/Vue/Next.js project
-npm start -- /Users/kokoyroy/Desktop/projects/nextjs-app
-```
+Currently, the tool only supports JavaScript, TypeScript, and TSX files. Support for other languages (Python, Go, Rust) is on the roadmap.
+</details>
 
 ---
 
-## Learn More
+## 📄 License
 
-For deep-dive explanations of the architecture, algorithms, and design decisions, see [LEARN.md](LEARN.md).
-
----
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- [Xenova](https://huggingface.co/Xenova) for the transformers.js library
-- [Tree-sitter](https://tree-sitter.github.io/) team for the parsing library
-- [sqlite-vec](https://github.com/asg017/sqlite-vec) for vector search in SQLite
+- [Xenova](https://huggingface.co/Xenova) for Transformers.js
+- [Tree-sitter](https://tree-sitter.github.io/) for code parsing
+- [sqlite-vec](https://github.com/asg017/sqlite-vec) for vector search
+- [Model Context Protocol](https://modelcontextprotocol.io/) for LLM integration
+
+---
+
+## 📞 Support
+
+- 📖 [Documentation](./docs/)
+- 🐛 [Issue Tracker](https://github.com/kokoyroy/RAGcodeindexing/issues)
+- 💬 [Discussions](https://github.com/kokoyroy/RAGcodeindexing/discussions)
+
+---
+
+<div align="center">
+
+**[⬆ Back to Top](#code-indexer)**
+
+Made with ❤️ by [kokoyroy](https://github.com/kokoyroy)
+
+</div>
