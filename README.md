@@ -204,9 +204,62 @@ npm run update --force
 
 ---
 
-## 🔄 Auto-Update
+## 🔄 Auto-Update System
 
-The package automatically checks for updates when you run `--version`. You can also manually update:
+Code Indexer uses a **hybrid auto-update system** with background notifications and MCP tools for full control.
+
+### Automatic Update Notifications
+
+When you start your MCP client (Claude, OpenCode, etc.), the indexer automatically checks for updates in the background:
+
+```
+[code-indexer-mcp] 🔄 Update available: v1.1.0
+[code-indexer-mcp] Current: v1.0.0
+[code-indexer-mcp] Ask Claude to install or run: npm run update
+```
+
+This check is:
+- ⚡ **Non-blocking** - Doesn't delay startup
+- 🔕 **Silent on failure** - Won't interrupt if check fails
+- ⏱️ **5-second timeout** - Fast and lightweight
+
+### Update via MCP Tools
+
+You can manage updates directly from your AI assistant using these MCP tools:
+
+**Check for Updates:**
+```
+You: Check if there are updates for code-indexer
+
+Claude: [Uses check_for_updates tool]
+An update is available!
+Current: v1.0.0
+Latest: v1.1.0
+Would you like me to install it?
+```
+
+**Install Updates:**
+```
+You: Install the code-indexer update
+
+Claude: [Uses install_update tool]
+Successfully updated to v1.1.0!
+⚠️  Please restart Claude/OpenCode for the update to take effect.
+```
+
+**Check Current Version:**
+```
+You: What version of code-indexer is installed?
+
+Claude: [Uses get_version tool]
+Package Version: 1.0.0
+Indexer Version: v1.0.0
+Indexer Installed: true
+```
+
+### Manual Update (CLI)
+
+You can also update from the command line:
 
 ```bash
 # Check for and install updates
@@ -216,7 +269,7 @@ npm run update
 npm run update -- --force
 ```
 
-Updates are downloaded from the GitHub repository's releases or develop branch.
+Updates are downloaded from the GitHub repository's releases (tags) only.
 
 ---
 
@@ -229,6 +282,9 @@ Once installed, the MCP server provides these tools to AI assistants:
 | `search_codebase` | Search code semantically | `query` (string), `limit` (number, optional) |
 | `reindex_codebase` | Force full re-index | none |
 | `get_index_stats` | Get indexing statistics | none |
+| `check_for_updates` | Check if new version is available | none |
+| `install_update` | Download and install latest version | none |
+| `get_version` | Get current installed version info | none |
 
 ### Example Usage
 
@@ -243,6 +299,26 @@ Found 5 relevant code sections:
 1. src/auth/login.ts:authenticateUser() - 95% match
 2. src/middleware/auth.ts:verifyToken() - 89% match
 ...
+```
+
+**Checking for Updates:**
+```
+You: Is there an update available for code-indexer?
+
+Claude: [Uses check_for_updates tool]
+Yes! An update is available.
+Current version: v1.0.0
+Latest version: v1.1.0
+Would you like me to install it?
+```
+
+**Installing Updates:**
+```
+You: Yes, install the update
+
+Claude: [Uses install_update tool]
+Successfully updated to v1.1.0!
+⚠️  IMPORTANT: Please restart Claude for the update to take effect.
 ```
 
 ---
