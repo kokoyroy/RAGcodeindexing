@@ -4,7 +4,8 @@ import { existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
-import { https } from 'follow-redirects';
+import pkg from 'follow-redirects';
+const { https } = pkg;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = join(__dirname, '..');

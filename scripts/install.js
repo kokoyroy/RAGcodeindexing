@@ -6,7 +6,8 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createWriteStream, createReadStream } from 'fs';
 import { pipeline } from 'stream/promises';
-import { https } from 'follow-redirects';
+import pkg from 'follow-redirects';
+const { https } = pkg;
 import { extract } from 'tar';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
