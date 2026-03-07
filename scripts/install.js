@@ -43,7 +43,7 @@
  */
 
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, rmSync, writeFileSync, copyFileSync, readdirSync } from 'fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync, copyFileSync, readdirSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createWriteStream } from 'fs';
@@ -269,7 +269,7 @@ async function install() {
     
     // ==================== STEP 6: INSTALL DEPENDENCIES ====================
     console.log('[code-indexer-mcp] Installing dependencies...');
-    execSync('npm install', { cwd: extractedDir, stdio: 'inherit' });
+    execSync('npm install --ignore-scripts', { cwd: extractedDir, stdio: 'inherit' });
     console.log('[code-indexer-mcp] Dependencies installed.\n');
 
     // ==================== STEP 7: BUILD TYPESCRIPT ====================
@@ -285,9 +285,10 @@ async function install() {
     copyDir(join(extractedDir, 'dist'), join(INDEXER_DIR, 'dist'));
     
     // Extract only dependencies (not devDependencies or scripts)
+    const sourcePackageJson = JSON.parse(readFileSync(join(extractedDir, 'package.json'), 'utf-8'));
     const packageJson = {
-      dependencies: require(join(extractedDir, 'package.json')).dependencies,
-      optionalDependencies: require(join(extractedDir, 'package.json')).optionalDependencies,
+      dependencies: sourcePackageJson.dependencies,
+      optionalDependencies: sourcePackageJson.optionalDependencies,
     };
     writeFileSync(join(INDEXER_DIR, 'package.json'), JSON.stringify(packageJson, null, 2));
 
