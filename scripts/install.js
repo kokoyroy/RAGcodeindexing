@@ -72,7 +72,7 @@ async function install() {
     const extractedDir = join(TEMP_DIR, `${REPO_NAME}-${BRANCH}`);
     
     console.log('[code-indexer-mcp] Installing dependencies...');
-    execSync('npm install', { cwd: extractedDir, stdio: 'inherit' });
+    execSync('npm install --legacy-peer-deps', { cwd: extractedDir, stdio: 'inherit' });
     console.log('[code-indexer-mcp] Dependencies installed.\n');
 
     console.log('[code-indexer-mcp] Building TypeScript...');
@@ -107,7 +107,7 @@ async function install() {
     console.log('[code-indexer-mcp] Files copied.\n');
 
     console.log('[code-indexer-mcp] Installing indexer dependencies...');
-    execSync('npm install --production', { cwd: INDEXER_DIR, stdio: 'inherit' });
+    execSync('npm install --production --legacy-peer-deps', { cwd: INDEXER_DIR, stdio: 'inherit' });
     console.log('[code-indexer-mcp] Indexer dependencies installed.\n');
 
     rmSync(TEMP_DIR, { recursive: true, force: true });
