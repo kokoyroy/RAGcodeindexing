@@ -98,9 +98,10 @@ async function install() {
 
     copyDir(join(extractedDir, 'dist'), join(INDEXER_DIR, 'dist'));
     
+    const sourcePackageJson = JSON.parse(readFileSync(join(extractedDir, 'package.json'), 'utf-8'));
     const packageJson = {
-      dependencies: require(join(extractedDir, 'package.json')).dependencies,
-      optionalDependencies: require(join(extractedDir, 'package.json')).optionalDependencies,
+      dependencies: sourcePackageJson.dependencies,
+      optionalDependencies: sourcePackageJson.optionalDependencies,
     };
     writeFileSync(join(INDEXER_DIR, 'package.json'), JSON.stringify(packageJson, null, 2));
 
