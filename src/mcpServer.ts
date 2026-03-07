@@ -38,6 +38,15 @@
  * 3. get_index_stats()
  *    - Get statistics about indexed code
  * 
+ * 4. check_for_updates()
+ *    - Check if a new version is available
+ * 
+ * 5. install_update()
+ *    - Download and install latest version
+ * 
+ * 6. get_version()
+ *    - Get current installed version info
+ * 
  * =============================================================================
  */
 
@@ -46,6 +55,15 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { indexer } from './indexer.js';
 import { db, SearchResult } from './database.js';
+import { existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { readFileSync } from 'fs';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT_DIR = join(__dirname, '..');
+const INDEXER_DIR = join(ROOT_DIR, '.indexer');
+const VERSION_FILE = join(INDEXER_DIR, 'VERSION');
 
 /**
  * =============================================================================
@@ -193,6 +211,33 @@ async function main() {
               properties: {},
             },
           },
+
+          {
+            name: 'check_for_updates',
+            description: 'Check if a new version of code-indexer is available on GitHub. Returns current version, latest version, and whether an update is available.',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+            },
+          },
+
+          {
+            name: 'install_update',
+            description: 'Download and install the latest version of code-indexer from GitHub. Requires a restart after installation to apply changes.',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+            },
+          },
+
+          {
+            name: 'get_version',
+            description: 'Get the current installed version of code-indexer and the indexer component.',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+            },
+          },
         ],
       };
     });
@@ -294,6 +339,118 @@ async function main() {
             },
           ],
         };
+      }
+
+      // ===== CHECK FOR UPDATES TOOL =====
+      if (name === 'check_for_updates') {
+        console.log('[MCP] Checking for updates...');
+        
+        try {
+          const updateScript = join(INDEXER_DIR, '..', 'scripts', 'update.js');
+          const { checkForUpdates } = await import(`file://${updateScript}`);
+          
+          const result = await checkForUpdates(5000);
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  hasUpdate: false,
+                  error: error instanceof Error ? error.message : 'Failed to check for updates',
+                }, null, 2),
+              },
+            ],
+          };
+        }
+      }
+
+      // ===== INSTALL UPDATE TOOL =====
+      if (name === 'install_update') {
+        console.log('[MCP] Installing update...');
+        
+        try {
+          const updateScript = join(INDEXER_DIR, '..', 'scripts', 'update.js');
+          const { installUpdate } = await import(`file://${updateScript}`);
+          
+          const result = await installUpdate();
+          
+          if (result.success) {
+            result.message += '\n\n⚠️  IMPORTANT: Please restart Claude/OpenCode for the update to take effect.';
+          }
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  success: false,
+                  error: error instanceof Error ? error.message : 'Failed to install update',
+                }, null, 2),
+              },
+            ],
+          };
+        }
+      }
+
+      // ===== GET VERSION TOOL =====
+      if (name === 'get_version') {
+        try {
+          const updateScript = join(INDEXER_DIR, '..', 'scripts', 'update.js');
+          const { getVersionInfo } = await import(`file://${updateScript}`);
+          
+          const result = getVersionInfo();
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          const packageJsonPath = join(ROOT_DIR, 'package.json');
+          const packageVersion = existsSync(packageJsonPath) 
+            ? JSON.parse(readFileSync(packageJsonPath, 'utf-8')).version 
+            : 'unknown';
+          
+          let indexerVersion = 'not installed';
+          if (existsSync(VERSION_FILE)) {
+            indexerVersion = readFileSync(VERSION_FILE, 'utf-8').trim();
+          }
+          
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  packageVersion,
+                  indexerVersion,
+                  indexerInstalled: existsSync(INDEXER_DIR),
+                }, null, 2),
+              },
+            ],
+          };
+        }
       }
 
       // Unknown tool - should not happen if list is correct
