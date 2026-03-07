@@ -23,6 +23,8 @@ Code Indexer MCP is a **Model Context Protocol (MCP)** server that provides sema
 - 🏠 **100% Local** - No cloud APIs, all processing happens on your machine
 - 🔌 **MCP Integration** - Works with Claude Desktop, OpenCode, VS Code, and other MCP clients
 - ⚡ **Easy Installation** - Downloads and installs the full indexer automatically
+- 🔄 **Auto-Update** - Checks for updates and can update automatically
+- 🛠️ **Config Helper** - Easy setup for Claude Desktop and OpenCode
 
 ---
 
@@ -35,6 +37,23 @@ npm install -g code-indexer-mcp
 ```
 
 The package will automatically download and install the full code indexer from the `develop` branch on first use.
+
+### Easy Configuration
+
+Use the configure script to automatically set up Claude Desktop or OpenCode:
+
+```bash
+# Configure for Claude Desktop
+npm run configure
+
+# Configure for OpenCode
+npm run configure opencode
+
+# Configure for both
+npm run configure both
+```
+
+The script will guide you through the setup process and update your config files.
 
 ### From Source
 
@@ -83,7 +102,32 @@ Add to your OpenCode config:
 ```bash
 # Start MCP server for a project
 code-indexer-mcp /path/to/your/project
+
+# Check version
+code-indexer-mcp --version
+
+# Check for updates
+npm run update
+
+# Force update
+npm run update --force
 ```
+
+---
+
+## 🔄 Auto-Update
+
+The package automatically checks for updates when you run `--version`. You can also manually update:
+
+```bash
+# Check for and install updates
+npm run update
+
+# Force update (reinstall even if already up to date)
+npm run update -- --force
+```
+
+Updates are downloaded from the GitHub repository's releases or develop branch.
 
 ---
 

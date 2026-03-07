@@ -15,7 +15,9 @@
   ],
   "scripts": {
     "postinstall": "node scripts/install.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "update": "node scripts/update.js",
+    "configure": "node scripts/configure.js"
   },
   "keywords": [
     "mcp",
@@ -26,7 +28,7 @@
     "code-analysis",
     "model-context-protocol"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "kokoyroy <kokoyroy@users.noreply.github.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
