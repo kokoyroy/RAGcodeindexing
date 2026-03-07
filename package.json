@@ -1,9 +1,7 @@
 {
   "name": "@kokoyroy/ragcodeindexing",
   "version": "1.0.0",
-  "publishConfig": {
-    "access": "public"
-  },
+  "private": true,
   "description": "MCP server for semantic code indexing with vector search. Downloads and installs full indexer on first use.",
   "main": "src/index.js",
   "type": "module",
