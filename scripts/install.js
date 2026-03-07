@@ -269,7 +269,7 @@ async function install() {
     
     // ==================== STEP 6: INSTALL DEPENDENCIES ====================
     console.log('[code-indexer-mcp] Installing dependencies...');
-    execSync('npm install --ignore-scripts', { cwd: extractedDir, stdio: 'inherit' });
+    execSync('npm install --ignore-scripts --legacy-peer-deps', { cwd: extractedDir, stdio: 'inherit' });
     console.log('[code-indexer-mcp] Dependencies installed.\n');
 
     // ==================== STEP 7: BUILD TYPESCRIPT ====================
