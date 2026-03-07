@@ -24,7 +24,7 @@ function getCurrentVersion() {
   }
 }
 
-function checkForUpdates() {
+async function checkForUpdates() {
   return new Promise((resolve, reject) => {
     https.get(
       `https://api.github.com/repos/kokoyroy/RAGcodeindexing/tags`,
@@ -56,6 +56,22 @@ function checkForUpdates() {
       }
     ).on('error', reject);
   });
+}
+
+async function checkForUpdatesBackground() {
+  try {
+    const updateScript = join(ROOT_DIR, 'scripts', 'update.js');
+    const { checkForUpdates } = await import(`file://${updateScript}`);
+    
+    const result = await checkForUpdates(5000);
+    
+    if (result.hasUpdate) {
+      console.error(`[code-indexer-mcp] 🔄 Update available: ${result.latestVersion}`);
+      console.error(`[code-indexer-mcp] Current: ${result.currentVersion}`);
+      console.error(`[code-indexer-mcp] Ask Claude to install or run: npm run update\n`);
+    }
+  } catch (error) {
+  }
 }
 
 async function main() {
@@ -105,6 +121,8 @@ async function main() {
     console.error('[code-indexer-mcp] This will download and install the indexer from the develop branch.\n');
     process.exit(1);
   }
+
+  checkForUpdatesBackground();
 
   try {
     console.error('[code-indexer-mcp] Starting MCP server...');

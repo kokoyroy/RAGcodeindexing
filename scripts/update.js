@@ -185,7 +185,158 @@ async function update(force = false) {
   }
 }
 
+export async function checkForUpdates(timeout = 5000) {
+  const currentVersion = getCurrentVersion();
+  
+  const timeoutPromise = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error('Update check timeout')), timeout)
+  );
+
+  try {
+    const latestTag = await Promise.race([fetchLatestTag(), timeoutPromise]);
+    
+    if (!latestTag) {
+      return {
+        hasUpdate: false,
+        currentVersion: currentVersion || 'unknown',
+        latestVersion: null,
+        error: 'Could not fetch latest version'
+      };
+    }
+
+    const hasUpdate = !currentVersion || currentVersion !== latestTag;
+    
+    return {
+      hasUpdate,
+      currentVersion: currentVersion || 'unknown',
+      latestVersion: latestTag
+    };
+  } catch (error) {
+    return {
+      hasUpdate: false,
+      currentVersion: currentVersion || 'unknown',
+      latestVersion: null,
+      error: error.message
+    };
+  }
+}
+
+export async function installUpdate() {
+  try {
+    if (!existsSync(INDEXER_DIR)) {
+      return {
+        success: false,
+        error: 'Indexer not installed. Run npm install first.'
+      };
+    }
+
+    const currentVersion = getCurrentVersion();
+    const latestTag = await fetchLatestTag();
+    
+    if (!latestTag) {
+      return {
+        success: false,
+        error: 'Could not fetch latest version'
+      };
+    }
+
+    if (currentVersion === latestTag) {
+      return {
+        success: true,
+        alreadyUpToDate: true,
+        installedVersion: currentVersion,
+        message: 'Already up to date'
+      };
+    }
+
+    if (existsSync(TEMP_DIR)) {
+      rmSync(TEMP_DIR, { recursive: true, force: true });
+    }
+    mkdirSync(TEMP_DIR, { recursive: true });
+
+    const tarballUrl = `https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/tags/${latestTag}.tar.gz`;
+    const tarballPath = join(TEMP_DIR, 'indexer.tar.gz');
+    
+    await downloadFile(tarballUrl, tarballPath);
+
+    await extract({
+      file: tarballPath,
+      cwd: TEMP_DIR,
+    });
+
+    const extractedDir = join(TEMP_DIR, `${REPO_NAME}-${latestTag.replace(/^v/, '')}`);
+    
+    execSync('npm install', { cwd: extractedDir, stdio: 'pipe' });
+    execSync('npm run build', { cwd: extractedDir, stdio: 'pipe' });
+
+    if (existsSync(INDEXER_DIR)) {
+      rmSync(INDEXER_DIR, { recursive: true, force: true });
+    }
+    mkdirSync(INDEXER_DIR, { recursive: true });
+    
+    const copyDir = (src, dest) => {
+      mkdirSync(dest, { recursive: true });
+      const entries = readdirSync(src, { withFileTypes: true });
+      for (const entry of entries) {
+        const srcPath = join(src, entry.name);
+        const destPath = join(dest, entry.name);
+        if (entry.isDirectory()) {
+          copyDir(srcPath, destPath);
+        } else {
+          copyFileSync(srcPath, destPath);
+        }
+      }
+    };
+
+    copyDir(join(extractedDir, 'dist'), join(INDEXER_DIR, 'dist'));
+    
+    const packageJson = JSON.parse(readFileSync(join(extractedDir, 'package.json'), 'utf-8'));
+    const minimalPackageJson = {
+      dependencies: packageJson.dependencies,
+      optionalDependencies: packageJson.optionalDependencies,
+    };
+    writeFileSync(join(INDEXER_DIR, 'package.json'), JSON.stringify(minimalPackageJson, null, 2));
+
+    writeFileSync(VERSION_FILE, latestTag);
+
+    execSync('npm install --production', { cwd: INDEXER_DIR, stdio: 'pipe' });
+
+    rmSync(TEMP_DIR, { recursive: true, force: true });
+
+    return {
+      success: true,
+      installedVersion: latestTag,
+      message: `Successfully updated to ${latestTag}`
+    };
+  } catch (error) {
+    if (existsSync(TEMP_DIR)) {
+      rmSync(TEMP_DIR, { recursive: true, force: true });
+    }
+    
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+export function getVersionInfo() {
+  const currentVersion = getCurrentVersion();
+  const packageJsonPath = join(ROOT_DIR, 'package.json');
+  const packageVersion = existsSync(packageJsonPath) 
+    ? JSON.parse(readFileSync(packageJsonPath, 'utf-8')).version 
+    : 'unknown';
+
+  return {
+    packageVersion,
+    indexerVersion: currentVersion || 'not installed',
+    indexerInstalled: existsSync(INDEXER_DIR)
+  };
+}
+
 const args = process.argv.slice(2);
 const forceUpdate = args.includes('--force') || args.includes('-f');
 
-update(forceUpdate);
+if (import.meta.url === `file://${process.argv[1]}`) {
+  update(forceUpdate);
+}
