@@ -66,7 +66,7 @@ This tool uses the **Model Context Protocol (MCP)**, an open standard for connec
 npm install -g code-indexer-mcp
 ```
 
-The package will automatically download and install the full code indexer from the `develop` branch on first use.
+The package will automatically download and install the full code indexer from the latest release on first use.
 
 ### Easy Configuration
 
@@ -384,7 +384,9 @@ npm install code-indexer-mcp
          ↓
 Post-install script runs
          ↓
-Downloads code from develop branch
+Fetches latest release tag from GitHub
+         ↓
+Downloads code from release tag
          ↓
 Installs dependencies
          ↓

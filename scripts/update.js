@@ -19,7 +19,6 @@ const VERSION_FILE = join(INDEXER_DIR, 'VERSION');
 
 const REPO_OWNER = 'kokoyroy';
 const REPO_NAME = 'RAGcodeindexing';
-const BRANCH = 'develop';
 
 async function fetchLatestTag() {
   return new Promise((resolve, reject) => {
@@ -90,13 +89,15 @@ async function update(force = false) {
     const latestTag = await fetchLatestTag();
 
     if (!latestTag) {
-      console.log('[code-indexer-mcp] Could not fetch latest version. Using develop branch.\n');
+      console.error('[code-indexer-mcp] ❌ Could not fetch latest release from GitHub');
+      console.error('[code-indexer-mcp] Please check your internet connection and try again.\n');
+      process.exit(1);
     }
 
     console.log('[code-indexer-mcp] Current version:', currentVersion || 'unknown');
-    console.log('[code-indexer-mcp] Latest release:', latestTag || 'develop branch');
+    console.log('[code-indexer-mcp] Latest release:', latestTag);
     
-    if (!force && currentVersion && latestTag && currentVersion === latestTag) {
+    if (!force && currentVersion && currentVersion === latestTag) {
       console.log('[code-indexer-mcp] ✅ Already up to date!\n');
       return;
     }
@@ -108,11 +109,10 @@ async function update(force = false) {
     }
     mkdirSync(TEMP_DIR, { recursive: true });
 
-    const sourceRef = latestTag || BRANCH;
-    const tarballUrl = `https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/${latestTag ? 'tags' : 'heads'}/${sourceRef}.tar.gz`;
+    const tarballUrl = `https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/tags/${latestTag}.tar.gz`;
     const tarballPath = join(TEMP_DIR, 'indexer.tar.gz');
     
-    console.log(`[code-indexer-mcp] Downloading ${sourceRef}...`);
+    console.log(`[code-indexer-mcp] Downloading ${latestTag}...`);
     await downloadFile(tarballUrl, tarballPath);
     console.log('[code-indexer-mcp] Download complete.\n');
 
@@ -123,7 +123,7 @@ async function update(force = false) {
     });
     console.log('[code-indexer-mcp] Extraction complete.\n');
 
-    const extractedDir = join(TEMP_DIR, `${REPO_NAME}-${sourceRef.replace(/^v/, '')}`);
+    const extractedDir = join(TEMP_DIR, `${REPO_NAME}-${latestTag.replace(/^v/, '')}`);
     
     console.log('[code-indexer-mcp] Installing dependencies...');
     execSync('npm install', { cwd: extractedDir, stdio: 'inherit' });
@@ -163,8 +163,7 @@ async function update(force = false) {
     };
     writeFileSync(join(INDEXER_DIR, 'package.json'), JSON.stringify(minimalPackageJson, null, 2));
 
-    const newVersion = latestTag || `${BRANCH}-${new Date().toISOString().split('T')[0]}`;
-    writeFileSync(VERSION_FILE, newVersion);
+    writeFileSync(VERSION_FILE, latestTag);
 
     console.log('[code-indexer-mcp] Installing indexer dependencies...');
     execSync('npm install --production', { cwd: INDEXER_DIR, stdio: 'inherit' });
@@ -173,7 +172,7 @@ async function update(force = false) {
     rmSync(TEMP_DIR, { recursive: true, force: true });
 
     console.log('[code-indexer-mcp] ✅ Update complete!\n');
-    console.log(`[code-indexer-mcp] Updated to version: ${newVersion}\n`);
+    console.log(`[code-indexer-mcp] Updated to version: ${latestTag}\n`);
 
   } catch (error) {
     console.error('[code-indexer-mcp] ❌ Update failed:', error.message);
