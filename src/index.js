@@ -271,15 +271,17 @@ async function main() {
   }
 
   // ==================== VALIDATE PROJECT PATH ====================
-  if (!projectPath) {
-    console.error('[code-indexer-mcp] ❌ Project path required');
-    console.error('[code-indexer-mcp] Usage: code-indexer-mcp <project-path>');
+  // Try multiple sources for project path:
+  // 1. Command line argument
+  // 2. PROJECT_PATH environment variable
+  // 3. Current working directory
+  const finalProjectPath = projectPath || process.env.PROJECT_PATH || process.cwd();
+  
+  if (!existsSync(finalProjectPath)) {
+    console.error(`[code-indexer-mcp] ❌ Project path does not exist: ${finalProjectPath}`);
+    console.error('[code-indexer-mcp] Usage: code-indexer-mcp [project-path]');
+    console.error('[code-indexer-mcp] Or set PROJECT_PATH environment variable');
     console.error('[code-indexer-mcp] Example: code-indexer-mcp /path/to/your/project');
-    process.exit(1);
-  }
-
-  if (!existsSync(projectPath)) {
-    console.error(`[code-indexer-mcp] ❌ Project path does not exist: ${projectPath}`);
     process.exit(1);
   }
 
@@ -310,7 +312,7 @@ async function main() {
   // ==================== START MCP SERVER ====================
   try {
     console.error('[code-indexer-mcp] Starting MCP server...');
-    console.error(`[code-indexer-mcp] Project: ${projectPath}`);
+    console.error(`[code-indexer-mcp] Project: ${finalProjectPath}`);
     
     // Dynamically import the MCP server
     const { McpServer } = await import(MCP_SERVER);
@@ -318,11 +320,11 @@ async function main() {
     // Handle different export styles
     if (typeof McpServer === 'function') {
       // Direct export: export function McpServer() { ... }
-      process.env.PROJECT_PATH = projectPath;
+      process.env.PROJECT_PATH = finalProjectPath;
       await McpServer();
     } else if (McpServer && typeof McpServer.default === 'function') {
       // Default export: export default function() { ... }
-      process.env.PROJECT_PATH = projectPath;
+      process.env.PROJECT_PATH = finalProjectPath;
       await McpServer.default();
     } else {
       console.error('[code-indexer-mcp] ❌ Invalid MCP server export');

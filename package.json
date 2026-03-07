@@ -18,7 +18,8 @@
     "setup": "node scripts/install.js",
     "start": "node src/index.js",
     "update": "node scripts/update.js",
-    "configure": "node scripts/configure.js"
+    "configure": "node scripts/configure.js",
+    "quickstart": "npm run setup && npm run configure all"
   },
   "keywords": [
     "mcp",

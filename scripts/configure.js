@@ -167,14 +167,15 @@ function findConfigPath(paths) {
  * 
  * @param {string} configPath - Path where config should be created
  * @param {string} clientName - Display name of the client
+ * @param {string} projectPath - Optional project path to use
  * 
  * WHAT IT DOES:
  * 1. Creates parent directories if needed
  * 2. Creates minimal config with code-indexer server
  * 3. Writes to disk
- * 4. Instructs user to edit <PROJECT_PATH>
+ * 4. If projectPath provided, uses it; otherwise uses placeholder
  */
-function createConfig(configPath, clientName) {
+function createConfig(configPath, clientName, projectPath = null) {
   // Create parent directories if they don't exist
   const configDir = dirname(configPath);
   if (!existsSync(configDir)) {
@@ -182,13 +183,14 @@ function createConfig(configPath, clientName) {
   }
 
   const packageDir = ROOT_DIR;
+  const finalProjectPath = projectPath || '<PROJECT_PATH>';
 
   // Create minimal MCP configuration
   const config = {
     mcpServers: {
       'code-indexer': {
         command: 'node',
-        args: [join(packageDir, 'src', 'index.js'), '<PROJECT_PATH>']
+        args: [join(packageDir, 'src', 'index.js'), finalProjectPath]
       }
     }
   };
@@ -197,7 +199,12 @@ function createConfig(configPath, clientName) {
   writeFileSync(configPath, JSON.stringify(config, null, 2));
   console.log(`\n[Configure] Created ${clientName} config at: ${configPath}`);
   console.log(`[Configure] Config:\n${JSON.stringify(config, null, 2)}\n`);
-  console.log('[Configure] ⚠️  Replace <PROJECT_PATH> with the path to your codebase\n');
+  
+  if (!projectPath) {
+    console.log('[Configure] ⚠️  Replace <PROJECT_PATH> with the path to your codebase\n');
+  } else {
+    console.log(`[Configure] ✅ Project path: ${projectPath}\n`);
+  }
 }
 
 // ============================================================================
@@ -209,6 +216,7 @@ function createConfig(configPath, clientName) {
  * 
  * @param {string} configPath - Path to existing config file
  * @param {string} clientName - Display name of the client
+ * @param {string} projectPath - Optional project path to use
  * 
  * WHAT IT DOES:
  * 1. Reads existing config
@@ -216,8 +224,9 @@ function createConfig(configPath, clientName) {
  * 3. Preserves other MCP servers
  * 4. Writes back to disk
  */
-function updateConfig(configPath, clientName) {
+function updateConfig(configPath, clientName, projectPath = null) {
   const packageDir = ROOT_DIR;
+  const finalProjectPath = projectPath || '<PROJECT_PATH>';
 
   try {
     // Read existing config
@@ -231,19 +240,24 @@ function updateConfig(configPath, clientName) {
     // Add or update code-indexer server
     config.mcpServers['code-indexer'] = {
       command: 'node',
-      args: [join(packageDir, 'src', 'index.js'), '<PROJECT_PATH>']
+      args: [join(packageDir, 'src', 'index.js'), finalProjectPath]
     };
 
     // Write updated config
     writeFileSync(configPath, JSON.stringify(config, null, 2));
     console.log(`\n[Configure] Updated ${clientName} config at: ${configPath}`);
     console.log(`[Configure] Added code-indexer MCP server\n`);
-    console.log('[Configure] ⚠️  Replace <PROJECT_PATH> with the path to your codebase\n');
+    
+    if (!projectPath) {
+      console.log('[Configure] ⚠️  Replace <PROJECT_PATH> with the path to your codebase\n');
+    } else {
+      console.log(`[Configure] ✅ Project path: ${projectPath}\n`);
+    }
   } catch (error) {
     // If update fails, create new config
     console.error(`[Configure] Failed to update ${clientName} config:`, error.message);
     console.log('[Configure] Creating new config instead...');
-    createConfig(configPath, clientName);
+    createConfig(configPath, clientName, projectPath);
   }
 }
 
@@ -264,18 +278,21 @@ function showHelp() {
   console.log('  • Cursor');
   console.log('  • VS Code (with MCP extension)');
   console.log('  • Any other MCP-compatible client\n');
-  console.log('Usage: npm run configure <client>\n');
-  console.log('Clients:');
-  console.log('  claude    - Claude Desktop / Claude Code');
-  console.log('  opencode  - OpenCode');
-  console.log('  cursor    - Cursor IDE');
-  console.log('  vscode    - VS Code (with MCP extension)');
-  console.log('  all       - Configure all detected clients');
-  console.log('  list      - List detected MCP clients\n');
+  console.log('Usage:\n');
+  console.log('  # Quick setup (auto-detect client + project path)');
+  console.log('  npm run configure all /path/to/your/project\n');
+  console.log('  # Configure specific client with project path');
+  console.log('  npm run configure opencode /path/to/your/project');
+  console.log('  npm run configure claude /path/to/your/project');
+  console.log('  npm run configure cursor /path/to/your/project\n');
+  console.log('  # Configure without project path (manual edit needed)');
+  console.log('  npm run configure opencode\n');
+  console.log('  # List detected clients');
+  console.log('  npm run configure list\n');
   console.log('Examples:');
-  console.log('  npm run configure claude');
-  console.log('  npm run configure opencode');
-  console.log('  npm run configure all\n');
+  console.log('  npm run configure opencode /Users/you/projects/my-app');
+  console.log('  npm run configure all /home/you/code/my-project');
+  console.log('  npm run configure claude C:\\Users\\you\\projects\\my-app\n');
 }
 
 // ============================================================================
@@ -328,8 +345,9 @@ function listClients() {
  * Configures a specific MCP client by creating or updating its config.
  * 
  * @param {string} clientKey - Key from CLIENT_CONFIGS (e.g., 'claude', 'opencode')
+ * @param {string} projectPath - Optional project path to use
  */
-function configureClient(clientKey) {
+function configureClient(clientKey, projectPath = null) {
   const client = CLIENT_CONFIGS[clientKey];
   if (!client) {
     console.error(`[Configure] Unknown client: ${clientKey}`);
@@ -343,11 +361,11 @@ function configureClient(clientKey) {
   if (configPath) {
     // Update existing config
     console.log(`[Configure] Found existing config at: ${configPath}`);
-    updateConfig(configPath, client.name);
+    updateConfig(configPath, client.name, projectPath);
   } else {
     // Create new config
     console.log('[Configure] No existing config found');
-    createConfig(client.paths[0], client.name);
+    createConfig(client.paths[0], client.name, projectPath);
   }
 }
 
@@ -361,6 +379,7 @@ function configureClient(clientKey) {
 async function configure() {
   const args = process.argv.slice(2);
   const client = args[0];
+  const projectPath = args[1];
 
   // No arguments - show help
   if (!client) {
@@ -382,7 +401,7 @@ async function configure() {
     for (const [key, clientData] of Object.entries(CLIENT_CONFIGS)) {
       const configPath = findConfigPath(clientData.paths);
       if (configPath) {
-        configureClient(key);
+        configureClient(key, projectPath);
         configured++;
       }
     }
@@ -404,7 +423,7 @@ async function configure() {
   }
 
   // Configure specific client
-  configureClient(client);
+  configureClient(client, projectPath);
 
   // Show next steps
   console.log('\n[Configure] ✅ Configuration complete!\n');
