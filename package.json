@@ -1,6 +1,9 @@
 {
-  "name": "code-indexer-mcp",
+  "name": "@kokoyroy/ragcodeindexing",
   "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "MCP server for semantic code indexing with vector search. Downloads and installs full indexer on first use.",
   "main": "src/index.js",
   "type": "module",
@@ -21,15 +24,25 @@
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "code-indexer",
     "semantic-search",
     "rag",
     "vector-embeddings",
     "code-analysis",
-    "model-context-protocol"
+    "ai",
+    "llm",
+    "tree-sitter",
+    "sqlite-vec",
+    "code-search",
+    "retrieval-augmented-generation"
   ],
   "author": "kokoyroy <kokoyroy@users.noreply.github.com>",
   "license": "MIT",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/kokoyroy"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/kokoyroy/RAGcodeindexing.git"
