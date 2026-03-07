@@ -2,6 +2,11 @@
 
 # Code Indexer
 
+> **⚠️ DEVELOPMENT BRANCH**  
+> This is the **develop** branch containing the full source code.  
+> **For installation, use the [`main` branch](https://github.com/kokoyroy/RAGcodeindexing)** or install via `npm install code-indexer-mcp`  
+> This branch is for contributors and those who want to modify the indexer.
+
 **AI-Powered Semantic Code Search for Your Local Codebase**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
