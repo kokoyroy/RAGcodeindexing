@@ -300,7 +300,7 @@ async function install() {
 
     // ==================== STEP 9: INSTALL PRODUCTION DEPENDENCIES ====================
     console.log('[code-indexer-mcp] Installing indexer dependencies...');
-    execSync('npm install --production', { cwd: INDEXER_DIR, stdio: 'inherit' });
+    execSync('npm install --production --legacy-peer-deps', { cwd: INDEXER_DIR, stdio: 'inherit' });
     console.log('[code-indexer-mcp] Indexer dependencies installed.\n');
 
     // ==================== STEP 10: CLEAN UP ====================
