@@ -285,10 +285,23 @@ async function main() {
 
   // ==================== CHECK INSTALLATION ====================
   if (!existsSync(MCP_SERVER)) {
-    console.error('[code-indexer-mcp] ❌ Indexer not installed!');
-    console.error('[code-indexer-mcp] Please run: npm install');
-    console.error('[code-indexer-mcp] This will download and install the indexer from the develop branch.\n');
-    process.exit(1);
+    console.error('[code-indexer-mcp] Indexer not installed. Running setup...\n');
+    
+    try {
+      const installScript = join(ROOT_DIR, 'scripts', 'install.js');
+      const { install } = await import(`file://${installScript}`);
+      await install();
+      
+      // Re-check after installation
+      if (!existsSync(MCP_SERVER)) {
+        console.error('[code-indexer-mcp] ❌ Installation completed but MCP server not found');
+        process.exit(1);
+      }
+    } catch (error) {
+      console.error('[code-indexer-mcp] ❌ Auto-installation failed:', error.message);
+      console.error('[code-indexer-mcp] Please run manually: npm run setup\n');
+      process.exit(1);
+    }
   }
 
   // ==================== CHECK FOR UPDATES (BACKGROUND) ====================

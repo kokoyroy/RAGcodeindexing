@@ -15,7 +15,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "postinstall": "node scripts/install.js",
+    "setup": "node scripts/install.js",
     "start": "node src/index.js",
     "update": "node scripts/update.js",
     "configure": "node scripts/configure.js"
