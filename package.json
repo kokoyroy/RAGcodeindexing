@@ -1,32 +1,42 @@
 {
-  "name": "code-indexer-mcp",
+  "name": "code-indexer",
   "version": "1.0.0",
-  "description": "MCP server for semantic code indexing with vector search. Downloads and installs full indexer on first use.",
-  "main": "src/index.js",
+  "description": "CLI tool for indexing codebases with semantic chunking, vector embeddings, and intelligent search. Perfect for RAG-based code analysis.",
+  "main": "dist/main.js",
   "type": "module",
   "bin": {
-    "code-indexer-mcp": "./src/index.js"
+    "code-indexer": "./dist/main.js",
+    "code-indexer-mcp": "./dist/mcpServer.js"
   },
   "files": [
-    "src/",
-    "scripts/",
+    "dist/",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "package.json"
   ],
   "scripts": {
-    "postinstall": "node scripts/install.js",
-    "start": "node src/index.js",
-    "update": "node scripts/update.js",
-    "configure": "node scripts/configure.js"
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "mcp": "node dist/mcpServer.js",
+    "prepublishOnly": "npm run build && npm test",
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "lint": "echo \"Linting not configured\" && exit 0"
   },
   "keywords": [
-    "mcp",
     "code-indexer",
     "semantic-search",
     "rag",
     "vector-embeddings",
     "code-analysis",
-    "model-context-protocol"
+    "tree-sitter",
+    "sqlite-vec",
+    "mcp",
+    "cli",
+    "developer-tools",
+    "code-search",
+    "embeddings",
+    "typescript",
+    "javascript"
   ],
   "author": "kokoyroy <kokoyroy@users.noreply.github.com>",
   "license": "MIT",
@@ -42,8 +52,28 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@dao-xyz/sqlite3-vec": "^0.0.19",
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "follow-redirects": "^1.15.6",
-    "tar": "^7.4.3"
+    "@xenova/transformers": "^2.17.2",
+    "better-sqlite3": "^9.2.2",
+    "md5": "^2.3.0",
+    "sqlite-vec": "^0.1.4",
+    "tree-sitter": "^0.25.0",
+    "tree-sitter-javascript": "^0.25.0",
+    "tree-sitter-typescript": "^0.23.2"
+  },
+  "optionalDependencies": {
+    "sqlite-vec-darwin-arm64": "^0.1.7-alpha.2",
+    "sqlite-vec-darwin-x64": "^0.1.7-alpha.2",
+    "sqlite-vec-linux-arm64": "^0.1.7-alpha.2",
+    "sqlite-vec-linux-x64": "^0.1.7-alpha.2",
+    "sqlite-vec-windows-x64": "^0.1.7-alpha.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/md5": "^2.3.5",
+    "@types/node": "^20.10.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.2"
   }
 }
