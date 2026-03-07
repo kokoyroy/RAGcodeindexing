@@ -8,13 +8,35 @@ import { homedir } from 'os';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = join(__dirname, '..');
 
-const CLAUDE_CONFIG_PATHS = [
-  join(homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json'),
-];
-
-const OPENCODE_CONFIG_PATHS = [
-  join(homedir(), '.config', 'opencode', 'opencode.json'),
-];
+const CLIENT_CONFIGS = {
+  claude: {
+    name: 'Claude Desktop / Claude Code',
+    paths: [
+      join(homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json'),
+      join(homedir(), '.config', 'claude', 'claude_desktop_config.json'),
+    ],
+  },
+  opencode: {
+    name: 'OpenCode',
+    paths: [
+      join(homedir(), '.config', 'opencode', 'opencode.json'),
+    ],
+  },
+  cursor: {
+    name: 'Cursor',
+    paths: [
+      join(homedir(), '.cursor', 'mcp.json'),
+      join(homedir(), 'Library', 'Application Support', 'Cursor', 'User', 'globalStorage', 'mcp.json'),
+    ],
+  },
+  vscode: {
+    name: 'VS Code (with MCP extension)',
+    paths: [
+      join(homedir(), '.vscode', 'mcp.json'),
+      join(homedir(), 'Library', 'Application Support', 'Code', 'User', 'mcp.json'),
+    ],
+  },
+};
 
 function findConfigPath(paths) {
   for (const configPath of paths) {
@@ -25,14 +47,13 @@ function findConfigPath(paths) {
   return null;
 }
 
-function createConfig(configPath, client) {
+function createConfig(configPath, clientName) {
   const configDir = dirname(configPath);
   if (!existsSync(configDir)) {
     mkdirSync(configDir, { recursive: true });
   }
 
-  const packageDir = process.cwd();
-  const command = `node "${join(packageDir, 'src', 'index.js')}"`;
+  const packageDir = ROOT_DIR;
 
   const config = {
     mcpServers: {
@@ -44,14 +65,13 @@ function createConfig(configPath, client) {
   };
 
   writeFileSync(configPath, JSON.stringify(config, null, 2));
-  console.log(`\n[Configure] Created ${client} config at: ${configPath}`);
+  console.log(`\n[Configure] Created ${clientName} config at: ${configPath}`);
   console.log(`[Configure] Config:\n${JSON.stringify(config, null, 2)}\n`);
   console.log('[Configure] ⚠️  Replace <PROJECT_PATH> with the path to your codebase\n');
 }
 
-function updateConfig(configPath, client) {
-  const packageDir = process.cwd();
-  const command = `node "${join(packageDir, 'src', 'index.js')}"`;
+function updateConfig(configPath, clientName) {
+  const packageDir = ROOT_DIR;
 
   try {
     const config = JSON.parse(readFileSync(configPath, 'utf-8'));
@@ -66,65 +86,140 @@ function updateConfig(configPath, client) {
     };
 
     writeFileSync(configPath, JSON.stringify(config, null, 2));
-    console.log(`\n[Configure] Updated ${client} config at: ${configPath}`);
+    console.log(`\n[Configure] Updated ${clientName} config at: ${configPath}`);
     console.log(`[Configure] Added code-indexer MCP server\n`);
     console.log('[Configure] ⚠️  Replace <PROJECT_PATH> with the path to your codebase\n');
   } catch (error) {
-    console.error(`[Configure] Failed to update ${client} config:`, error.message);
+    console.error(`[Configure] Failed to update ${clientName} config:`, error.message);
     console.log('[Configure] Creating new config instead...');
-    createConfig(configPath, client);
+    createConfig(configPath, clientName);
+  }
+}
+
+function showHelp() {
+  console.log('\n[code-indexer-mcp] Configuration Helper\n');
+  console.log('====================================\n');
+  console.log('This tool configures code-indexer-mcp for MCP-compatible clients.\n');
+  console.log('Supported clients:');
+  console.log('  • Claude Desktop / Claude Code');
+  console.log('  • OpenCode');
+  console.log('  • Cursor');
+  console.log('  • VS Code (with MCP extension)');
+  console.log('  • Any other MCP-compatible client\n');
+  console.log('Usage: npm run configure <client>\n');
+  console.log('Clients:');
+  console.log('  claude    - Claude Desktop / Claude Code');
+  console.log('  opencode  - OpenCode');
+  console.log('  cursor    - Cursor IDE');
+  console.log('  vscode    - VS Code (with MCP extension)');
+  console.log('  all       - Configure all detected clients');
+  console.log('  list      - List detected MCP clients\n');
+  console.log('Examples:');
+  console.log('  npm run configure claude');
+  console.log('  npm run configure opencode');
+  console.log('  npm run configure all\n');
+}
+
+function listClients() {
+  console.log('\n[Configure] Checking for MCP clients...\n');
+  
+  const detected = [];
+  const notDetected = [];
+  
+  for (const [key, client] of Object.entries(CLIENT_CONFIGS)) {
+    const configPath = findConfigPath(client.paths);
+    if (configPath) {
+      detected.push({ key, name: client.name, path: configPath });
+      console.log(`✅ ${client.name}`);
+      console.log(`   Config: ${configPath}\n`);
+    } else {
+      notDetected.push({ key, name: client.name });
+    }
+  }
+  
+  if (notDetected.length > 0) {
+    console.log('\nNot detected (config files not found):');
+    notDetected.forEach(({ name }) => console.log(`  • ${name}`));
+  }
+  
+  if (detected.length === 0) {
+    console.log('\n[Configure] No MCP clients detected.');
+    console.log('[Configure] You can still configure manually or install an MCP client.\n');
+  } else {
+    console.log(`\n[Configure] Found ${detected.length} MCP client(s).\n`);
+    console.log('[Configure] Run: npm run configure <client>');
+    console.log('[Configure] Or: npm run configure all\n');
+  }
+}
+
+function configureClient(clientKey) {
+  const client = CLIENT_CONFIGS[clientKey];
+  if (!client) {
+    console.error(`[Configure] Unknown client: ${clientKey}`);
+    console.log('[Configure] Run: npm run configure list\n');
+    process.exit(1);
+  }
+
+  console.log(`\n[Configure] Configuring ${client.name}...\n`);
+  const configPath = findConfigPath(client.paths);
+  
+  if (configPath) {
+    console.log(`[Configure] Found existing config at: ${configPath}`);
+    updateConfig(configPath, client.name);
+  } else {
+    console.log('[Configure] No existing config found');
+    createConfig(client.paths[0], client.name);
   }
 }
 
 async function configure() {
-  console.log('\n[code-indexer-mcp] Configuration Helper\n');
-  console.log('====================================\n');
-
   const args = process.argv.slice(2);
   const client = args[0];
 
-  if (!client || !['claude', 'opencode', 'both'].includes(client.toLowerCase())) {
-    console.log('Usage: npm run configure <claude|opencode|both>\n');
-    console.log('Examples:');
-    console.log('  npm run configure claude    - Configure Claude Desktop');
-    console.log('  npm run configure opencode  - Configure OpenCode');
-    console.log('  npm run configure both     - Configure both clients\n');
+  if (!client) {
+    showHelp();
+    process.exit(0);
+  }
+
+  if (client === 'list') {
+    listClients();
+    process.exit(0);
+  }
+
+  if (client === 'all') {
+    console.log('\n[Configure] Configuring all detected MCP clients...\n');
+    
+    let configured = 0;
+    for (const [key, clientData] of Object.entries(CLIENT_CONFIGS)) {
+      const configPath = findConfigPath(clientData.paths);
+      if (configPath) {
+        configureClient(key);
+        configured++;
+      }
+    }
+    
+    if (configured === 0) {
+      console.log('[Configure] No MCP clients detected.');
+      console.log('[Configure] Run: npm run configure list\n');
+    } else {
+      console.log(`\n[Configure] ✅ Configured ${configured} client(s)!\n`);
+    }
+    process.exit(0);
+  }
+
+  if (!CLIENT_CONFIGS[client]) {
+    console.error(`\n[Configure] Unknown client: ${client}`);
+    showHelp();
     process.exit(1);
   }
 
-  const clientLower = client.toLowerCase();
-
-  if (clientLower === 'claude' || clientLower === 'both') {
-    console.log('\n[Configure] Configuring Claude Desktop...\n');
-    const configPath = findConfigPath(CLAUDE_CONFIG_PATHS);
-    
-    if (configPath) {
-      console.log(`[Configure] Found existing Claude config at: ${configPath}`);
-      updateConfig(configPath, 'Claude Desktop');
-    } else {
-      console.log('[Configure] No existing Claude config found');
-      createConfig(CLAUDE_CONFIG_PATHS[0], 'Claude Desktop');
-    }
-  }
-
-  if (clientLower === 'opencode' || clientLower === 'both') {
-    console.log('\n[Configure] Configuring OpenCode...\n');
-    const configPath = findConfigPath(OPENCODE_CONFIG_PATHS);
-    
-    if (configPath) {
-      console.log(`[Configure] Found existing OpenCode config at: ${configPath}`);
-      updateConfig(configPath, 'OpenCode');
-    } else {
-      console.log('[Configure] No existing OpenCode config found');
-      createConfig(OPENCODE_CONFIG_PATHS[0], 'OpenCode');
-    }
-  }
+  configureClient(client);
 
   console.log('\n[Configure] ✅ Configuration complete!\n');
   console.log('[Configure] Next steps:');
   console.log('1. Edit the config file');
   console.log('2. Replace <PROJECT_PATH> with your codebase path');
-  console.log('3. Restart Claude Desktop or OpenCode\n');
+  console.log(`3. Restart ${CLIENT_CONFIGS[client].name}\n`);
   console.log('[Configure] Example paths:');
   console.log('  macOS: /Users/yourname/projects/my-project');
   console.log('  Linux: /home/yourname/projects/my-project');

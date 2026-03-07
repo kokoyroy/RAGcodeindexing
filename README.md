@@ -16,15 +16,45 @@
 
 ## 🎯 Overview
 
-Code Indexer MCP is a **Model Context Protocol (MCP)** server that provides semantic code search capabilities to AI assistants like Claude, OpenCode, ChatGPT, and more.
+Code Indexer MCP is a **Model Context Protocol (MCP)** server that provides semantic code search capabilities to AI assistants.
+
+**Works with any MCP-compatible client:**
+- ✅ **Claude Code** - Anthropic's coding assistant
+- ✅ **Claude Desktop** - Claude's desktop application  
+- ✅ **OpenCode** - Open-source AI coding agent
+- ✅ **Cursor** - AI-powered code editor
+- ✅ **VS Code** - With MCP extension
+- ✅ **Any MCP client** - Standard MCP protocol
 
 **Key Features:**
 - 🔍 **Semantic Search** - Find code by meaning, not just keywords
 - 🏠 **100% Local** - No cloud APIs, all processing happens on your machine
-- 🔌 **MCP Integration** - Works with Claude Desktop, OpenCode, VS Code, and other MCP clients
+- 🔌 **MCP Integration** - Works with any MCP-compatible client
 - ⚡ **Easy Installation** - Downloads and installs the full indexer automatically
 - 🔄 **Auto-Update** - Checks for updates and can update automatically
 - 🛠️ **Config Helper** - Easy setup for Claude Desktop and OpenCode
+
+---
+
+## 🔌 MCP Protocol - Universal Compatibility
+
+This tool uses the **Model Context Protocol (MCP)**, an open standard for connecting AI assistants to external tools and data sources. This means:
+
+✅ **Works Everywhere** - Any MCP-compatible client can use this tool  
+✅ **Future-Proof** - As more clients adopt MCP, they automatically work with this tool  
+✅ **Standard Interface** - Same configuration works across different AI assistants  
+
+**Supported MCP Clients:**
+| Client | Type | Status |
+|--------|------|--------|
+| Claude Code | Coding Assistant | ✅ Supported |
+| Claude Desktop | Desktop App | ✅ Supported |
+| OpenCode | Coding Agent | ✅ Supported |
+| Cursor | Code Editor | ✅ Supported |
+| VS Code | Code Editor (with MCP extension) | ✅ Supported |
+| Zed | Code Editor | ✅ Supported |
+| Continue | VS Code Extension | ✅ Supported |
+| Any MCP Client | Any app supporting MCP | ✅ Supported |
 
 ---
 
@@ -67,7 +97,58 @@ npm install
 
 ## 🚀 Usage
 
+### Quick Setup (Recommended)
+
+```bash
+# Install globally
+npm install -g code-indexer-mcp
+
+# Auto-configure for your MCP client
+npm run configure
+
+# Or specify a client
+npm run configure claude     # For Claude Code / Claude Desktop
+npm run configure opencode   # For OpenCode
+npm run configure cursor     # For Cursor
+npm run configure all        # Configure all detected clients
+```
+
+### With Claude Code
+
+**Method 1: Auto-Configure (Recommended)**
+```bash
+npm run configure claude
+# Edit the config file to set your project path
+# Restart Claude Code
+```
+
+**Method 2: Manual Config**
+
+Add to your Claude Code MCP config:
+
+**macOS/Linux:** `~/.config/claude/claude_desktop_config.json`  
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "code-indexer": {
+      "command": "code-indexer-mcp",
+      "args": ["/path/to/your/project"]
+    }
+  }
+}
+```
+
 ### With Claude Desktop
+
+**Method 1: Auto-Configure (Recommended)**
+```bash
+npm run configure claude
+# Restart Claude Desktop
+```
+
+**Method 2: Manual Config**
 
 Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
@@ -83,6 +164,14 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 ```
 
 ### With OpenCode
+
+**Method 1: Auto-Configure (Recommended)**
+```bash
+npm run configure opencode
+# Restart OpenCode
+```
+
+**Method 2: Manual Config**
 
 Add to your OpenCode config:
 
