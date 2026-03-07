@@ -2,10 +2,20 @@
 
 # Code Indexer
 
-> **⚠️ DEVELOPMENT BRANCH**  
-> This is the **develop** branch containing the full source code.  
-> **For installation, use the [`main` branch](https://github.com/kokoyroy/RAGcodeindexing)** or install via `npm install code-indexer-mcp`  
+> **⚠️ DEVELOPMENT BRANCH**
+> This is the **develop** branch containing the full source code.
+> **For installation, use the [`main` branch](https://github.com/kokoyroy/RAGcodeindexing)** or install via `npm install -g kokoyroy/RAGcodeindexing`
 > This branch is for contributors and those who want to modify the indexer.
+
+---
+
+## 🌿 Branch Structure
+
+| Branch | Purpose | Who Uses It |
+|--------|---------|-------------|
+| **`main`** | Installer Package | **Users** - Install from here |
+| **`release`** | Release Code | **Installer** - Downloads from GitHub tags |
+| **`develop`** *(you are here)* | Development | **Contributors** - Source code & development |
 
 **AI-Powered Semantic Code Search for Your Local Codebase**
 
